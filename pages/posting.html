@@ -1,0 +1,125 @@
+<!--
+    Name: Vinh Pham
+    NSID: tip434
+    Number: 11290849
+    Course: CMPT-353
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment 3</title>
+</head>
+
+<body>
+
+    <h1>Form</h1>
+
+    <!-- Form for creating a new post -->
+    <form id="postForm">
+        <div>
+            <label for="topic">Topic:</label> <br>
+            <input type="text" id="topic" name="topic" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="data">Data:</label> <br>
+            <textarea id="data" name="data" rows="4" required></textarea>
+        </div>
+
+        <br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <br><br>
+    <h1>Existing Data</h1>
+
+    <!--Button for displaying-->
+    <button id="button">Show</button>
+
+    <!--Showing the post-->
+    <div id="showContainer"></div>
+
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('postForm');
+    const button = document.getElementById('button');
+    const postsContainer = document.getElementById('showContainer');
+
+    // Function to submit a new post to the server.
+    //using asynchronous fetch.
+    async function submitPost(topic, data) {
+        try {
+            const response = await fetch('/addPost', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ topic, data }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Something went wrong!');
+            }
+            return await response.text();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error! Cannot creating post.');
+        }
+    }
+
+    // Function to display data from the server and display them
+    //using asynchronous fetch.
+    async function Display() {
+        try {
+            const response = await fetch('/getPosts');
+            if (!response.ok) {
+                throw new Error('Something went wrong');
+            }
+            const posts = await response.json();
+
+            //create new div for each post.
+            postsContainer.innerHTML = '';
+            posts.forEach(post => {
+                const div = document.createElement('div');
+                div.innerHTML = `${post.topic}<p>${post.data}</p><p>${new Date(post.timestamp).toLocaleString()}</p>`;
+                postsContainer.appendChild(div);
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error! Cannot loading posts.');
+        }
+    }
+
+    // Event listener for form submission
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const topic = formData.get('topic');
+        const data = formData.get('data');
+
+        submitPost(topic, data).then(response => {
+            alert('Post Created: ' + response);
+
+            // Reset the form fields after submission
+            form.reset();
+        });
+    });
+
+    // Event listener for loading posts
+    button.addEventListener('click', function () {
+        Display();
+    });
+});
+
+</script>
+
+</html>
